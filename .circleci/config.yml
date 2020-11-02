@@ -18,7 +18,7 @@ jobs:
       - save_cache:
           key: yarn-packages-v2{{ checksum "yarn.lock" }}      
           paths:
-            - ./node_modules
+            - ~/.cache/yarn
   tests:
     docker:
       - image: cimg/node:14.10.1
@@ -31,4 +31,4 @@ jobs:
       - save_cache:
           key: yarn-packages-v2{{ checksum "yarn.lock" }}      
           paths:
-            - ./node_modules
+            - ~/.cache/yarn
