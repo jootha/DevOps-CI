@@ -11,4 +11,5 @@ jobs:
           name: The First Step
           command: |
             echo 'Hello World!'
+            npm-v1-dependencies-{{ checksum "yarn.lock" }}
             yarn global add node-gyp && yarn install
