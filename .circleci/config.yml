@@ -1,12 +1,49 @@
+  
 version: 2.1
+workflows:
+  build_and_test:
+    jobs:
+      - build
+      - lint:
+          requires:
+            - build
+      - tests:
+          requires:
+            - build
 jobs:
   build:
-    docker: 
-      - image: cimg/node:14.10.1 # the primary container, where your job's commands are run
-        auth:
-          username: mydockerhub-user
-          password: $DOCKERHUB_PASSWORD  # context / project UI env-var reference
+    docker:
+      - image: cimg/node:14.10.1
     steps:
-      - checkout # check out the code in the project directory
-      - run: echo "hello world" # run the `echo` command qsdsqd
-      
+      - checkout
+      - restore_cache:
+          key: yarn-packages-v3{{ checksum "yarn.lock" }}
+      - run: yarn global add node-gyp && yarn install
+      - save_cache:
+          key: yarn-packages-v3{{ checksum "yarn.lock" }}      
+          paths:
+            - ./node_modules
+  tests:
+    docker:
+      - image: cimg/node:14.10.1
+    steps: 
+      - checkout
+      - restore_cache:
+          key: yarn-packages-v3{{ checksum "yarn.lock" }}
+      - run: yarn test:ci
+      - save_cache:
+          key: yarn-packages-v3{{ checksum "yarn.lock" }}      
+          paths:
+            - ./node_modules
+  lint:
+    docker:
+      - image: cimg/node:14.10.1
+    steps:
+      - checkout
+      - restore_cache:
+          key: yarn-packages-v3{{ checksum "yarn.lock" }}
+      - run: yarn lint && yarn format:check
+      - save_cache:
+          key: yarn-packages-v3{{ checksum "yarn.lock" }}      
+          paths:
+            - ./node_modules
