@@ -1,34 +1,34 @@
-workflows:
 version: 2.1
+workflows:
+  build_and_test:
     jobs:
-      - install
-      - test:
+      - build
+      - tests:
           requires:
-            - install
-
+            - build
 jobs:
-  build: install
+  build:
     docker:
-      - image: cimg/node:14.10.1 # the primary container, where your job's commands are run
-
-    steps:
-      - checkout 
-      - restore_cache:
-          key: yarn-packages-{{ checksum "yarn.lock" }}
-      - run: yarn global add node-gyp && yarn install
-
-      - save_cache:
-          key: yarn-packages-{{ checksum "yarn.lock" }}      
-          paths:
-            - ~/.cache/yarn
-  test:
+      - image: cimg/node:14.10.1
     steps:
       - checkout
-     - restore_cache:
-        key: yarn-packages-{{ checksum "yarn.lock" }}
-    - run: yarn lint && yarn format:check
-    - run: yarn test:ci
-    - save_cache:
-          key: yarn-packages-{{ checksum "yarn.lock" }}      
+      - restore_cache:
+          key: yarn-packages-v2{{ checksum "yarn.lock" }}
+      - run: yarn global add node-gyp && yarn install
+      - save_cache:
+          key: yarn-packages-v2{{ checksum "yarn.lock" }}      
+          paths:
+            - ./node_modules
+  tests:
+    docker:
+      - image: cimg/node:14.10.1
+    steps: 
+      - checkout
+      - restore_cache:
+          key: yarn-packages-v2{{ checksum "yarn.lock" }}
+      - run: yarn lint && yarn format:check
+      - run: yarn test:ci
+      - save_cache:
+          key: yarn-packages-v2{{ checksum "yarn.lock" }}      
           paths:
             - ./node_modules
