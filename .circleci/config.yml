@@ -2,14 +2,28 @@ version: 2.1
 jobs:
   build:
     docker:
-      - image: alpine:3.7
+      - image: cimg/node:14.10.1
         auth:
           username: mydockerhub-user
           password: $DOCKERHUB_PASSWORD  # context / project UI env-var reference
-    steps:
-      - run:
+    steps: # dans les steps faut mettre un restore et un save avec la key et un path de cache pour le save
+    - checkout
+    - run : echo 'Hello World!'
+    - run: yarn global add node-gyp && yarn install
+    - restore_cache:
+        key: yarn-packages-{{ checksum "yarn.lock" }}
+    - save_cache:
+        key: yarn-packages-{{ checksum "yarn.lock" }}
+        paths:
+            - ~/.cache/yarn
           name: The First Step
-          command: |
-            echo 'Hello World!'
-            npm-v1-dependencies-{{ checksum "yarn.lock" }}
-            yarn global add node-gyp && yarn install
+           
+            
+            
+
+
+
+
+
+
+
