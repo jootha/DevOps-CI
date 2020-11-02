@@ -5,6 +5,7 @@ jobs:
       - image: cimg/node:14.10.1 # the primary container, where your job's commands are run
     steps:
       - checkout # check out the code in the project directory
+      - run: echo "hello world"
       - run: yarn global add node-gyp && yarn install
       - restore_cache:
           key: yarn-packages-{{ checksum "yarn.lock" }}
