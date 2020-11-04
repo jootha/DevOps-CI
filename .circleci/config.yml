@@ -54,8 +54,6 @@ jobs:
   database:
     docker:
     - image: circleci/prostgres:9.6.2-alpine
-        username: mydokerhub-user
-        password: $DOCKERHUB_PASSWORD
     environment:
         POSTGRES_USER: psqluer
         POSTGRES_DB: psdb
