@@ -16,7 +16,7 @@ workflows:
 jobs:
   build:
     docker:
-      - image: cimg/node:14.10.1
+      - image: cimg/node:12.18
     steps:
       - checkout
       - restore_cache:
@@ -28,7 +28,7 @@ jobs:
             - ./node_modules
   tests:
     docker:
-      - image: cimg/node:14.10.1
+      - image: cimg/node:12.18
     steps: 
       - checkout
       - restore_cache:
@@ -40,7 +40,7 @@ jobs:
             - ./node_modules
   lint:
     docker:
-      - image: cimg/node:14.10.1
+      - image: cimg/node:12.18
     steps:
       - checkout
       - restore_cache:
@@ -53,15 +53,19 @@ jobs:
             
   database:
     docker:
+    -image: cimg/node:12.18
+        environment:
+            DATABASE_URL: postgres://psqluer:psqlpassword@localhost:5432/psdb
+            JWT_SECRET: some string yo want
+            API_PORT: 3000
+            API_HOST: localhost
+            API_PROTOCOL: http
+    
     - image: circleci/prostgres:9.6.2-alpine
-    environment:
-        POSTGRES_USER: psqluer
-        POSTGRES_DB: psdb
-        DATABASE_URL: postgres://psqluer:psqlpassword@localhost:5432/psdb
-        JWT_SECRET: some string yo want
-        API_PORT: 3000
-        API_HOST: localhost
-        API_PROTOCOL: http
+        environment:
+            POSTGRES_DB: psdb
+            POSTGRES_USER: psqluer
+            
         
     steps:
       - checkout
