@@ -10,6 +10,9 @@ workflows:
       - tests:
           requires:
             - build
+      - db:
+        requires:
+            - build
 
 jobs:
   build:
@@ -49,4 +52,25 @@ jobs:
           paths:
             - ./node_modules
             
-            
+    db:
+        docker:
+        - image: cimg/node:12.18
+        - image: circleci/postgres:9.6-alpine
+        environment: 
+        DATABASE_URL: postgres://psqluer:psqlpassword@localhost:5432/psdb
+        JWT_SECRET: some string yo want
+        API_PORT: 3000
+        API_HOST: localhost
+        API_PROTOCOL: http
+        POSTGRES_USER: psqluer
+        POSTGRES_DB: psdb
+        
+    steps:
+      - checkout
+      - restore_cache:
+          key: yarn-packages-v3{{ checksum "yarn.lock" }}
+      - run: yarn test:e2e
+      - save_cache:
+          key: yarn-packages-v3{{ checksum "yarn.lock" }}      
+          paths:
+            - ./node_modules
