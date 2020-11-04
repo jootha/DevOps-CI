@@ -52,7 +52,8 @@ jobs:
             - ./node_modules
             
   database:
-   - image: circleci/postgres:9.6-alpine
+    docker:
+        - image: circleci/postgres:9.6-alpine
         auth:
           username: mydockerhub-user
           password: $DOCKERHUB_PASSWORD  # context / project UI env-var reference
