@@ -1,81 +1,75 @@
---- 
-jobs: 
-  build: 
-    docker: 
-      - 
-        image: "cimg/node:12.18"
-    steps: 
-      - checkout
-      - 
-        restore_cache: 
-          key: "yarn-packages-v3{{ checksum \"yarn.lock\" }}"
-      - 
-        run: "yarn global add node-gyp && yarn install"
-      - 
-        save_cache: 
-          key: "yarn-packages-v3{{ checksum \"yarn.lock\" }}"
-          paths: 
-            - ./node_modules
-  lint: 
-    db: 
-      API_HOST: localhost
-      API_PORT: 3000
-      API_PROTOCOL: http
-      DATABASE_URL: "postgres://psqluer:psqlpassword@localhost:5432/psdb"
-      JWT_SECRET: "some string yo want"
-      POSTGRES_DB: psdb
-      POSTGRES_USER: psqluer
-      docker: 
-        - 
-          image: "cimg/node:12.18"
-        - 
-          image: "circleci/postgres:9.6-alpine"
-      environment: ~
-    docker: 
-      - 
-        image: "cimg/node:12.18"
-    steps: 
-      - checkout
-      - 
-        restore_cache: 
-          key: "yarn-packages-v3{{ checksum \"yarn.lock\" }}"
-      - 
-        run: "yarn test:e2e"
-      - 
-        save_cache: 
-          key: "yarn-packages-v3{{ checksum \"yarn.lock\" }}"
-          paths: 
-            - ./node_modules
-  tests: 
-    docker: 
-      - 
-        image: "cimg/node:12.18"
-    steps: 
-      - checkout
-      - 
-        restore_cache: 
-          key: "yarn-packages-v3{{ checksum \"yarn.lock\" }}"
-      - 
-        run: "yarn test:ci"
-      - 
-        save_cache: 
-          key: "yarn-packages-v3{{ checksum \"yarn.lock\" }}"
-          paths: 
-            - ./node_modules
 version: 2.1
-workflows: 
-  build_and_test: 
-    jobs: 
+workflows:
+  build_and_test:
+    jobs:
       - build
-      - 
-        lint: 
-          requires: 
+      - lint:
+          requires:
             - build
-      - 
-        tests: 
-          requires: 
+      - tests:
+          requires:
             - build
-      - 
-        db:
-        requires: 
-          - build
+      - database:
+          require:
+            - build
+jobs:
+  build:
+    docker:
+      - image: cimg/node:14.10.1
+    steps:
+      - checkout
+      - restore_cache:
+          key: yarn-packages-v3{{ checksum "yarn.lock" }}
+      - run: yarn global add node-gyp && yarn install
+      - save_cache:
+          key: yarn-packages-v3{{ checksum "yarn.lock" }}      
+          paths:
+            - ./node_modules
+  tests:
+    docker:
+      - image: cimg/node:14.10.1
+    steps: 
+      - checkout
+      - restore_cache:
+          key: yarn-packages-v3{{ checksum "yarn.lock" }}
+      - run: yarn test:ci
+      - save_cache:
+          key: yarn-packages-v3{{ checksum "yarn.lock" }}      
+          paths:
+            - ./node_modules
+  lint:
+    docker:
+      - image: cimg/node:14.10.1
+    steps:
+      - checkout
+      - restore_cache:
+        key: yarn-packages-v3{{ checksum "yarn.lock" }}
+      - run: yarn lint && yarn format:check
+      - save_cache:
+        key: yarn-packages-v3{{ checksum "yarn.lock" }}      
+        paths:
+          - ./node_modules
+
+  database:
+    - image: circleci/postgres:9.6-alpine
+    - image: circleci/golang:1.8-jessie
+      auth:
+        username: mydockerhub-user
+        password: $DOCKERHUB_PASSWORD  # context / project UI env-var reference
+      environment:
+        POSTGRES_USER: psqluer
+        POSTGRES_DB: psdb
+        DATABASE_URL: postgres://psqluer:psqlpassword@localhost:5432/psdb
+        JWT_SECRET: some string yo want
+        API_PORT: 3000
+        API_HOST: localhost
+        API_PROTOCOL: http
+      steps:
+        - checkout
+        - restore_cache:
+          key: yarn-packages-v3{{ checksum "yarn.lock" }}
+        - run: yarn test:e2e
+        - save_cache:
+          key: yarn-packages-v3{{ checksum "yarn.lock" }}      
+          paths:
+            - ./node_modules
