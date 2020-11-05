@@ -6,30 +6,13 @@ workflows:
       - lint:
           requires:
             - build
-      - test:
+      - tests:
           requires:
             - build
-      - e2e:
+      - db:
           requires:
             - build
-      - build_docker:
-          requires:
-            - e2e
-            - lint
-            - test
-          filters:
-            branches:
-                only:
-                    - main
-      - publish_image:
-          context: 
-            - DOCKER
-          requires:
-            - build_docker
-          filters:
-            branches:
-                only:
-                    - main
+     
 jobs:
     build:
         docker:
@@ -43,6 +26,18 @@ jobs:
                 key: yarn-packages-v3{{ checksum "yarn.lock" }}
                 paths:
                     - ./node_modules
+    tests:
+        docker:
+            - image: cimg/node:12.18
+        steps:
+            - checkout
+            - restore_cache:
+                key: yarn-packages-v3{{ checksum "yarn.lock" }}
+            - run : yarn test:ci
+            - save_cache:
+                key: yarn-packages-v3{{ checksum "yarn.lock" }}
+                paths:
+                    - ./node_modules
     lint:
         docker:
             - image: cimg/node:12.18
@@ -51,26 +46,23 @@ jobs:
             - restore_cache:
                 key: yarn-packages-v3{{ checksum "yarn.lock" }}
             - run : yarn lint && yarn format:check
-    test:
-        docker:
-            - image: cimg/node:12.18
-        steps:
-            - checkout
-            - restore_cache:
+            - save_cache:
                 key: yarn-packages-v3{{ checksum "yarn.lock" }}
-            - run : yarn test:ci
-    e2e:
+                paths:
+                    - ./node_modules
+            
+    db:
         docker:
             - image: cimg/node:12.18
               environment: 
-                DATABASE_URL: "postgres://e2e:test@localhost:5432/psdb"
+                DATABASE_URL: "postgres://psqluer:test@localhost:5432/psdb"
                 API_PORT: 3000
                 API_HOST: localhost
                 API_PROTOCOL: http
-                JWT_SECRET: yeet
+                JWT_SECRET: some string yo want
             - image: circleci/postgres:9.6.2-alpine
               environment:
-                POSTGRES_USER: e2e
+                POSTGRES_USER: psqluer
                 POSTGRES_DB: psdb   
                 POSTGRES_PASSWORD: test
         
@@ -84,35 +76,3 @@ jobs:
             - run: 
                 name: Launching e2e test
                 command: yarn test:e2e
-    build_docker:
-        environment:
-            IMAGE_NAME: sgttabouret/my-awesome-ci-expr
-        docker:
-            - image: circleci/buildpack-deps:stretch
-        steps: 
-            - checkout
-            - setup_remote_docker
-            - run: docker image build --tag $IMAGE_NAME:app .
-            - run: docker save -o image.tar $IMAGE_NAME
-            - persist_to_workspace:
-                root: .
-                paths:
-                    - ./image.tar         
-    publish_image:
-        environment:
-            IMAGE_NAME: sgttabouret/my-awesome-ci-expr
-        docker:
-            - image: circleci/buildpack-deps:stretch
-        steps:
-            - attach_workspace:
-                at: /tmp/workspace
-            - setup_remote_docker
-            - run: docker load -i /tmp/workspace/image.tar
-            - run: 
-                name: Login and Publish to Docker Hub
-                command: |
-                    echo "$DOCKERHUB_PASS" | docker login --username sgttabouret --password-stdin 
-                    docker tag $IMAGE_NAME:app $IMAGE_NAME:$CIRCLE_BUILD_NUM
-                    docker tag $IMAGE_NAME:app $IMAGE_NAME:latest
-                    docker push $IMAGE_NAME:latest
-                    docker push $IMAGE_NAME:$CIRCLE_BUILD_NUM
