@@ -37,10 +37,10 @@ jobs:
         steps:
             - checkout
             - restore_cache:
-                key: yarn-packages-v2{{ checksum "yarn.lock" }}
+                key: yarn-packages-v3{{ checksum "yarn.lock" }}
             - run: yarn global add node-gyp && yarn install
             - save_cache:
-                key: yarn-packages-v2{{ checksum "yarn.lock" }}
+                key: yarn-packages-v3{{ checksum "yarn.lock" }}
                 paths:
                     - ./node_modules
     lint:
@@ -49,7 +49,7 @@ jobs:
         steps:
             - checkout
             - restore_cache:
-                key: yarn-packages-v2{{ checksum "yarn.lock" }}
+                key: yarn-packages-v3{{ checksum "yarn.lock" }}
             - run : yarn lint && yarn format:check
     test:
         docker:
@@ -57,7 +57,7 @@ jobs:
         steps:
             - checkout
             - restore_cache:
-                key: yarn-packages-v2{{ checksum "yarn.lock" }}
+                key: yarn-packages-v3{{ checksum "yarn.lock" }}
             - run : yarn test:ci
     e2e:
         docker:
@@ -77,7 +77,7 @@ jobs:
         steps: 
             - checkout
             - restore_cache:
-                key: yarn-packages-v2{{ checksum "yarn.lock" }}
+                key: yarn-packages-v3{{ checksum "yarn.lock" }}
             - run:
                 name: Waiting for POSTGRES
                 command: dockerize -wait tcp://localhost:5432 -timeout 1m
