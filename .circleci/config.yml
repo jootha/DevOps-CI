@@ -12,6 +12,12 @@ workflows:
       - db:
           requires:
             - build
+      - dockerhub:
+          requires:
+            - build
+            - lint
+            - tests
+      
      
 jobs:
     build:
@@ -74,3 +80,25 @@ jobs:
                 key: yarn-packages-v3{{ checksum "yarn.lock" }}
                 paths:
                     - ./node_modules
+    dockerhub:
+        environment:
+            IMAGE_NAME: jonathancardoso/building-on-ci
+        docker:
+            - image: circleci/buildpack-deps:stretch
+        steps: 
+            - checkout
+            - setup_remote_docker
+            - run: docker image build --tag $IMAGE_NAME:app .
+            - run:
+                command: |
+                    echo "$DOCKERHUB_PASS" | docker login --username sgttabouret --password-stdin 
+                    docker tag $IMAGE_NAME:app $IMAGE_NAME:$CIRCLE_BUILD_NUM
+                    docker tag $IMAGE_NAME:app $IMAGE_NAME:latest
+                    docker push $IMAGE_NAME:latest
+                    docker push $IMAGE_NAME:$CIRCLE_BUILD_NUM
+
+            
+            
+            
+            
+            
