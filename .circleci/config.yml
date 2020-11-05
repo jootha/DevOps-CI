@@ -82,7 +82,7 @@ jobs:
                     - ./node_modules
     dockerhub:
         environment:
-            IMAGE_NAME: jonathancardoso/building-on-ci
+            IMAGE_NAME: jootha/DevOps-CI
         docker:
             - image: circleci/buildpack-deps:stretch
         steps: 
@@ -90,15 +90,9 @@ jobs:
             - setup_remote_docker
             - run: docker image build --tag $IMAGE_NAME:app .
             - run:
+                name: Publish Docker Image to Docker Hub
                 command: |
-                    echo "$DOCKERHUB_PASS" | winpty docker login --username sgttabouret --password-stdin 
-                    docker tag $IMAGE_NAME:app $IMAGE_NAME:$CIRCLE_BUILD_NUM
-                    docker tag $IMAGE_NAME:app $IMAGE_NAME:latest
+                    echo "$DOCKERHUB_PASS" | docker login -u alecomte -p a86a2e77-25ec-4cd2-b060-c55987957ca4
                     docker push $IMAGE_NAME:latest
-                    docker push $IMAGE_NAME:$CIRCLE_BUILD_NUM
 
-            
-            
-            
-            
             
