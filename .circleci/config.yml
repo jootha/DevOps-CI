@@ -82,7 +82,7 @@ jobs:
                     - ./node_modules
     dockerhub:
         environment:
-            IMAGE_NAME: jootha/DevOps-CI
+            IMAGE_NAME: jootha/devops-ci
         docker:
             - image: circleci/buildpack-deps:stretch
         steps: 
