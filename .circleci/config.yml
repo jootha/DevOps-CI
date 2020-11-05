@@ -12,6 +12,12 @@ workflows:
       - db:
           requires:
             - build
+      - dockerhub:
+          requires:
+            - build
+            - lint
+            - tests
+      
      
 jobs:
     build:
@@ -74,3 +80,21 @@ jobs:
                 key: yarn-packages-v3{{ checksum "yarn.lock" }}
                 paths:
                     - ./node_modules
+    dockerhub:
+        environment:
+            IMAGE_NAME: jootha/devops-ci
+        docker:
+            - image: circleci/buildpack-deps:stretch
+        steps: 
+            - checkout
+            - setup_remote_docker
+            - run: docker image build --tag $IMAGE_NAME:app .
+            
+            - run:
+                name: Publish Docker Image to Docker Hub
+                command: |
+                    echo "$DOCKERHUB_PASS" | docker login -u alecomte -p a86a2e77-25ec-4cd2-b060-c55987957ca4
+                    docker tag $IMAGE_NAME:app $IMAGE_NAME:$CIRCLE_BUILD_NUM
+                    docker tag $IMAGE_NAME:app $IMAGE_NAME:latest
+
+            
